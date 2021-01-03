@@ -37,4 +37,8 @@ contract Utils {
         }
         str = string(s);
     }
+    
+    function areStringsEqual(string memory a, string memory b) public pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
+    }
 }

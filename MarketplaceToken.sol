@@ -8,10 +8,10 @@ contract MarketplaceToken {
   string public name = "MarketplaceToken";
   string public symbol = "MT";
   uint public decimals = 18;
-  uint public currentSupply = 1000;
-  constructor(uint initialSupply) public {
-    currentSupply = initialSupply;
-    token.init(currentSupply);
+  uint public initialSupply = 1000;
+  constructor(uint _initialSupply) public {
+    initialSupply = _initialSupply;
+    token.init(initialSupply);
   }
   function totalSupply() constant public returns (uint) {
     return token.totalSupply;
