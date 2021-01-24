@@ -63,6 +63,10 @@ contract Users is MarketplaceInterface{
         return managerList;
     }
     
+    function getFreelancer(address freelancerAddr) public view returns (Freelancer){
+        return freelancers[freelancerAddr];
+    }
+    
     function getFreelancers() public view returns (Freelancer[] memory) {
         uint freelancerAddressesLength = freelancerAddresses.length;
         Freelancer[] memory freelancerList = new Freelancer[](freelancerAddressesLength);

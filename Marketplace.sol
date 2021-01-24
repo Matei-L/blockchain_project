@@ -3,30 +3,33 @@ pragma experimental ABIEncoderV2;
 
 import './Users.sol';
 import './MarketplaceInterface.sol';
+import './MarketplaceFreelancers.sol';
 
 contract Marketplace is MarketplaceInterface  {
+
 
     struct Product {
         string description;
         uint developmentCost;
+        uint developmentCostUsed;
         uint evaluationCost;
         string areaOfExpertise;
         address managerAddress;
         CrowdFunding crowdFunding;
+        address evaluatorAddress;
     }
     
+
     Users users;
-    
+    MarketplaceFreelancers marketplaceFreelancers;
     uint NR_AREAS_OF_EXPERTISE = 3;
     
-    address[] managerAddresses;
-    address[] freelancerAddresses;
-    address[] evaluatorAddresses;
-    address[] founderAddresses;
     string[] productNames;
+    
     
     mapping(string => Product) products;
     
+    Product[] fundingStatusReachedProducts;
     
     function initProduct(string _name,
                          string _description,
@@ -45,6 +48,7 @@ contract Marketplace is MarketplaceInterface  {
         products[_name].areaOfExpertise = _areaOfExpertise;
         products[_name].managerAddress = msg.sender;
         products[_name].crowdFunding = new CrowdFunding(users.getToken() , _developmentCost + _evaluationCost);
+        products[_name].developmentCostUsed = 0;
     }
 
     
@@ -57,27 +61,19 @@ contract Marketplace is MarketplaceInterface  {
         return products[_name];
     }
     
-        
-    // function getManagers() public view returns (Manager[]) {
-    //     return users.getManagers();
-    // }
+    function getFundingStatusReachedProducts() public isFreelancerOrEvaluator view returns (Product[]){
+        return fundingStatusReachedProducts;
+    }
     
-    // function getFreelancers() public view returns (Freelancer[] memory) {
-    //     return users.getFreelancers();
-    // }
-    
-    // function getEvaluators() public view returns (Evaluator[] memory) {
-    //     return users.getEvaluators();
-    // }
-    
-    // function getFounders() public view returns (Founder[] memory) {
-    //     return users.getFounders();
-    // }
-    
+    function getFreelancersApplications(string name) public view returns(FreelancersApplications[] memory){
+        FreelancersApplications[] memory result = marketplaceFreelancers.getFreelancersApplications(name);
+        return result;
+    }
     
     // constructors
     constructor(Users _users) public {
         users = _users;
+        marketplaceFreelancers = new MarketplaceFreelancers(users);
     }
     
     
@@ -96,6 +92,9 @@ contract Marketplace is MarketplaceInterface  {
     
     function contributeFunding(string name, uint valueInTokens) public isFounder {
         products[name].crowdFunding.contribute(msg.sender, valueInTokens);
+        if(areStringsEqual(getFundingStatus(name), "Target reached!"))
+            fundingStatusReachedProducts.push(products[name]);
+        
     }
     
     function removeFunding(string name, uint valueInTokens) public isFounder {
@@ -106,6 +105,15 @@ contract Marketplace is MarketplaceInterface  {
         products[name].crowdFunding.forceClose();
     }
     
+    function registerEvaluator(string name) public isEvaluator isEvaluatorNotSet(name) {
+        if(areStringsEqual(getFundingStatus(name), "Target reached!"))
+            products[name].evaluatorAddress = msg.sender;
+    }
+    
+    function registerFralancer(string name, uint cost) public isFreelancer {
+        if(areStringsEqual(getFundingStatus(name), "Target reached!"))
+            marketplaceFreelancers.registerFralancer(name, cost, msg.sender);
+    }
     
     // modifiers
     modifier isManager() {
@@ -123,8 +131,19 @@ contract Marketplace is MarketplaceInterface  {
         _;
     }
     
+    modifier isFreelancerOrEvaluator(){
+        require(users.isFreelancer(msg.sender) == true ||
+                users.isEvaluator(msg.sender) == true, "Caller is not freelancer or evaluator");
+        _;
+    }
+    
     modifier isFounder() {
         require(users.isFounder(msg.sender) == true, "Caller is not founder");
+        _;
+    }
+    
+    modifier isEvaluatorNotSet(string name){
+        require(products[name].evaluatorAddress == address(0), "This product has already an evaluator");
         _;
     }
     
