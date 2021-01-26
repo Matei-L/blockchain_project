@@ -32,7 +32,7 @@ contract MarketplaceInterface is Ownable, Utils {
         string name;
     }
     
-        struct FreelancersApplications {
+    struct FreelancersApplications {
         uint cost;
         uint reputation;
         string areaOfExpertise;
@@ -42,7 +42,6 @@ contract MarketplaceInterface is Ownable, Utils {
     struct ProductFrelancers{
         address[] freelancersApplicationsAddr;
         mapping(address => FreelancersApplications) freelancersApplications;
-
     }
     
 }

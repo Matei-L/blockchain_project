@@ -11,12 +11,13 @@ contract Marketplace is MarketplaceInterface  {
     struct Product {
         string description;
         uint developmentCost;
-        uint developmentCostUsed;
         uint evaluationCost;
         string areaOfExpertise;
         address managerAddress;
-        CrowdFunding crowdFunding;
         address evaluatorAddress;
+        CrowdFunding crowdFunding;
+        bool isInExecution;
+        
     }
     
 
@@ -48,7 +49,7 @@ contract Marketplace is MarketplaceInterface  {
         products[_name].areaOfExpertise = _areaOfExpertise;
         products[_name].managerAddress = msg.sender;
         products[_name].crowdFunding = new CrowdFunding(users.getToken() , _developmentCost + _evaluationCost);
-        products[_name].developmentCostUsed = 0;
+        products[_name].isInExecution = false;
     }
 
     
@@ -66,8 +67,11 @@ contract Marketplace is MarketplaceInterface  {
     }
     
     function getFreelancersApplications(string name) public view returns(FreelancersApplications[] memory){
-        FreelancersApplications[] memory result = marketplaceFreelancers.getFreelancersApplications(name);
-        return result;
+        return marketplaceFreelancers.getFreelancersApplications(name);
+    }
+    
+    function getAcceptedFreelancers(string name) public view returns(FreelancersApplications[] memory){
+        return marketplaceFreelancers.getAcceptedFreelancers(name);
     }
     
     // constructors
@@ -75,7 +79,6 @@ contract Marketplace is MarketplaceInterface  {
         users = _users;
         marketplaceFreelancers = new MarketplaceFreelancers(users);
     }
-    
     
     // product founding
      function getFundingStatus(string name) public view returns (string) {
@@ -110,42 +113,47 @@ contract Marketplace is MarketplaceInterface  {
             products[name].evaluatorAddress = msg.sender;
     }
     
-    function registerFralancer(string name, uint cost) public isFreelancer {
-        if(areStringsEqual(getFundingStatus(name), "Target reached!"))
-            marketplaceFreelancers.registerFralancer(name, cost, msg.sender);
-    }
+    // function registerFreelancer(string name, uint cost) public isFreelancer {
+    //     if(areStringsEqual(getFundingStatus(name), "Target reached!"))
+    //         marketplaceFreelancers.registerFreelancer(name, cost, msg.sender);
+    // }
+    
+    // function acceptFreelancer(string name, address freelancer) public{
+    //     if(products[name].managerAddress == msg.sender)
+    //     {
+    //         products[name].isInExecution=marketplaceFreelancers.acceptFreelancer(name, products[name].developmentCost, freelancer);
+    //     }
+    // }
     
     // modifiers
     modifier isManager() {
-        require(users.isManager(msg.sender) == true, "Caller is not manager");
+        require(users.isManager(msg.sender) == true, "NM");
         _;
     }
     
     modifier isFreelancer() {
-        require(users.isFreelancer(msg.sender) == true, "Caller is not freelancer");
+        require(users.isFreelancer(msg.sender) == true, "NF");
         _;
     }
     
     modifier isEvaluator() {
-        require(users.isEvaluator(msg.sender) == true, "Caller is not evaluator");
+        require(users.isEvaluator(msg.sender) == true, "NE");
         _;
     }
     
     modifier isFreelancerOrEvaluator(){
         require(users.isFreelancer(msg.sender) == true ||
-                users.isEvaluator(msg.sender) == true, "Caller is not freelancer or evaluator");
+                users.isEvaluator(msg.sender) == true, "NFE");
         _;
     }
     
     modifier isFounder() {
-        require(users.isFounder(msg.sender) == true, "Caller is not founder");
+        require(users.isFounder(msg.sender) == true, "NF");
         _;
     }
     
     modifier isEvaluatorNotSet(string name){
-        require(products[name].evaluatorAddress == address(0), "This product has already an evaluator");
+        require(products[name].evaluatorAddress == address(0), "E");
         _;
     }
-    
-    
 }

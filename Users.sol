@@ -97,7 +97,7 @@ contract Users is MarketplaceInterface{
     function dummyInit(address[] _managerAddresses,
                    address[] _freelancerAddresses,
                    address[] _evaluatorAddresses,
-                   address[] _founderAddresses) {
+                   address[] _founderAddresses) onlyOwner{
         uint managerAddressesLength = _managerAddresses.length;
         uint freelancerAddressesLength = _freelancerAddresses.length;
         uint evaluatorAddressesLength = _evaluatorAddresses.length;
